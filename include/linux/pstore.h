@@ -54,23 +54,32 @@ struct pstore_info;
  * @type:	pstore record type
  * @id:		per-type unique identifier for record
  * @time:	timestamp of the record
- * @count:	for PSTORE_TYPE_DMESG, the Oops count.
- * @compressed:	for PSTORE_TYPE_DMESG, whether the buffer is compressed
  * @buf:	pointer to record contents
  * @size:	size of @buf
  * @ecc_notice_size:
  *		ECC information for @buf
+ *
+ * Valid for PSTORE_TYPE_DMESG @type:
+ *
+ * @count:	Oops count since boot
+ * @reason:	kdump reason for notification
+ * @part:	position in a multipart record
+ * @compressed:	whether the buffer is compressed
+ *
  */
 struct pstore_record {
 	struct pstore_info	*psi;
 	enum pstore_type_id	type;
 	u64			id;
 	struct timespec		time;
-	int			count;
-	bool			compressed;
 	char			*buf;
 	ssize_t			size;
 	ssize_t			ecc_notice_size;
+
+	int			count;
+	enum kmsg_dump_reason	reason;
+	unsigned int		part;
+	bool			compressed;
 };
 
 struct pstore_info {
@@ -84,10 +93,7 @@ struct pstore_info {
 	int		(*open)(struct pstore_info *psi);
 	int		(*close)(struct pstore_info *psi);
 	ssize_t		(*read)(struct pstore_record *record);
-	int		(*write)(enum pstore_type_id type,
-			enum kmsg_dump_reason reason, u64 *id,
-			unsigned int part, int count, bool compressed,
-			size_t size, struct pstore_info *psi);
+	int		(*write)(struct pstore_record *record);
 	int		(*write_buf)(enum pstore_type_id type,
 			enum kmsg_dump_reason reason, u64 *id,
 			unsigned int part, const char *buf, bool compressed,
