@@ -315,11 +315,13 @@ void workingset_refault(struct page *page, void *shadow)
 	SetPageActive(page);
 	atomic_long_inc(&lruvec->inactive_age);
 	inc_node_state(pgdat, WORKINGSET_ACTIVATE);
+	mem_cgroup_inc_stat(memcg, MEMCG_WORKINGSET_ACTIVATE);
 
 	/* Page was active prior to eviction */
 	if (workingset) {
 		SetPageWorkingset(page);
 		inc_node_state(pgdat, WORKINGSET_RESTORE);
+	        mem_cgroup_inc_stat(memcg, MEMCG_WORKINGSET_RESTORE);
 	}
 out:
 	rcu_read_unlock();
