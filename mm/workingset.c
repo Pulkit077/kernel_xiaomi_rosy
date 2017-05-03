@@ -302,7 +302,7 @@ void workingset_refault(struct page *page, void *shadow)
 	refault_distance = (refault - eviction) & EVICTION_MASK;
 
 	inc_node_state(pgdat, WORKINGSET_REFAULT);
-	mem_cgroup_inc_stat(memcg, MEMCG_WORKINGSET_REFAULT);
+	mem_cgroup_inc_stat(memcg, WORKINGSET_REFAULT);
 
 	/*
 	 * Compare the distance to the existing workingset size. We
@@ -315,13 +315,13 @@ void workingset_refault(struct page *page, void *shadow)
 	SetPageActive(page);
 	atomic_long_inc(&lruvec->inactive_age);
 	inc_node_state(pgdat, WORKINGSET_ACTIVATE);
-	mem_cgroup_inc_stat(memcg, MEMCG_WORKINGSET_ACTIVATE);
+	mem_cgroup_inc_stat(memcg, WORKINGSET_ACTIVATE);
 
 	/* Page was active prior to eviction */
 	if (workingset) {
 		SetPageWorkingset(page);
 		inc_node_state(pgdat, WORKINGSET_RESTORE);
-	        mem_cgroup_inc_stat(memcg, MEMCG_WORKINGSET_RESTORE);
+	        mem_cgroup_inc_stat(memcg, WORKINGSET_RESTORE);
 	}
 out:
 	rcu_read_unlock();
@@ -463,8 +463,7 @@ static enum lru_status shadow_lru_isolate(struct list_head *item,
 	}
 	BUG_ON(workingset_node_shadows(node));
 	inc_node_state(page_pgdat(virt_to_page(node)), WORKINGSET_NODERECLAIM);
-	mem_cgroup_inc_page_stat(virt_to_page(node),
-				 MEMCG_WORKINGSET_NODERECLAIM);
+	mem_cgroup_inc_page_stat(virt_to_page(node), WORKINGSET_NODERECLAIM);
 	if (!__radix_tree_delete_node(&mapping->page_tree, node))
 		BUG();
 
