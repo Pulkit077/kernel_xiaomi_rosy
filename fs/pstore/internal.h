@@ -64,5 +64,7 @@ extern int	pstore_mkfile(enum pstore_type_id, char *psname, u64 id,
 			      size_t size, struct timespec time,
 			      struct pstore_info *psi);
 extern bool	pstore_is_mounted(void);
+extern void	pstore_record_init(struct pstore_record *record,
+				   struct pstore_info *psi);
 
 #endif

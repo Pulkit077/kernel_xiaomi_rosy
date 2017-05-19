@@ -470,6 +470,14 @@ static size_t copy_kmsg_to_buffer(int hsize, size_t len)
 	return total_len;
 }
 
+void pstore_record_init(struct pstore_record *record,
+			struct pstore_info *psinfo)
+{
+	memset(record, 0, sizeof(*record));
+
+	record->psi = psinfo;
+}
+
 /*
  * callback from kmsg_dump. (s2,l2) has the most recently
  * written bytes, older bytes are in (s1,l1). Save as much
@@ -504,15 +512,14 @@ static void pstore_dump(struct kmsg_dumper *dumper,
 		int header_size;
 		int zipped_len = -1;
 		size_t dump_size;
-		struct pstore_record record = {
-			.type = PSTORE_TYPE_DMESG,
-			.count = oopscount,
-			.reason = reason,
-			.part = part,
-			.compressed = false,
-			.buf = psinfo->buf,
-			.psi = psinfo,
-		};
+		struct pstore_record record;
+
+		pstore_record_init(&record, psinfo);
+		record.type = PSTORE_TYPE_DMESG;
+		record.count = oopscount;
+		record.reason = reason;
+		record.part = part;
+		record.buf = psinfo->buf;
 
 		if (big_oops_buf && is_locked) {
 			dst = big_oops_buf;
