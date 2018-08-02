@@ -90,8 +90,8 @@ static int ion_page_pool_add(struct ion_page_pool *pool, struct page *page)
 		__SetPageMovable(page, pool->inode->i_mapping);
 	mod_node_page_state(page_pgdat(page), NR_INDIRECTLY_RECLAIMABLE_BYTES,
 			    (1 << (PAGE_SHIFT + pool->order)));
-	mod_zone_page_state(page_zone(page), NR_FILE_PAGES, page_count);
-	mod_zone_page_state(page_zone(page), NR_INACTIVE_FILE, page_count);
+	mod_node_page_state(page_pgdat(page), NR_FILE_PAGES, page_count);
+	mod_node_page_state(page_pgdat(page), NR_INACTIVE_FILE, page_count);
 
 	mutex_unlock(&pool->mutex);
 	return 0;
@@ -118,8 +118,8 @@ static struct page *ion_page_pool_remove(struct ion_page_pool *pool, bool high)
 	mod_node_page_state(page_pgdat(page), NR_INDIRECTLY_RECLAIMABLE_BYTES,
 			    -(1 << (PAGE_SHIFT + pool->order)));
 
-	mod_zone_page_state(page_zone(page), NR_INACTIVE_FILE, -page_count);
-	mod_zone_page_state(page_zone(page), NR_FILE_PAGES, -page_count);
+	mod_node_page_state(page_pgdat(page), NR_INACTIVE_FILE, -page_count);
+	mod_node_page_state(page_pgdat(page), NR_FILE_PAGES, -page_count);
 
 	return page;
 }
