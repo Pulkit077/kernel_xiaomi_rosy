@@ -13,7 +13,7 @@ export
 endif
 ifeq ($(CONFIG_ARCH_SDM450), y)
 include $(srctree)/techpack/audio/config/sdm450auto.conf
-export
+export $(shell sed 's/=.*//' $(srctree)/techpack/audio/config/sdm450auto.conf)
 endif
 
 # Use USERINCLUDE when you must reference the UAPI directories only.
