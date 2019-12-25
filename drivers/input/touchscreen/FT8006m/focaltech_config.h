@@ -95,11 +95,11 @@
  * show debug log info
  * enable it for debug, disable it for release
  */
-#define FTS_DEBUG_EN                            1
+#define FTS_DEBUG_EN                            0
 
-#define FTS_LOCK_DOWN_INFO			1
+#define FTS_LOCK_DOWN_INFO			0
 
-#define FTS_CAT_RAWDATA			1
+#define FTS_CAT_RAWDATA			0
 
 /*
  * Linux MultiTouch Protocol
@@ -132,13 +132,13 @@
  * ESD check & protection
  * default: disable
  */
-#define FTS_ESDCHECK_EN                         1
+#define FTS_ESDCHECK_EN                         0
 
 /*
  * Production test enable
  * 1: enable, 0:disable(default)
  */
-#define FTS_TEST_EN                             1
+#define FTS_TEST_EN                             0
 
 /*
  * Glove mode enable
@@ -181,21 +181,13 @@
 /*
  * auto upgrade, please keep enable
  */
-#ifdef WT_COMPILE_FACTORY_VERSION
-	#define FTS_AUTO_UPGRADE_EN                     0
-#else
 #define FTS_AUTO_UPGRADE_EN                     1
-#endif
 
 /*
  * auto upgrade for lcd cfg
  * default: 0
  */
-#ifdef WT_COMPILE_FACTORY_VERSION
-	#define FTS_AUTO_UPGRADE_FOR_LCD_CFG_EN         0
-#else
-#define FTS_AUTO_UPGRADE_FOR_LCD_CFG_EN         1
-#endif
+#define FTS_AUTO_UPGRADE_FOR_LCD_CFG_EN         0
 
 /* auto cb check
  * default: disable
