@@ -40,6 +40,7 @@ void dbs_check_cpu(struct dbs_data *dbs_data, int cpu)
 	unsigned int max_load = 0;
 	unsigned int ignore_nice;
 	unsigned int j;
+	struct cpufreq_govinfo govinfo;
 
 	if (dbs_data->cdata->governor == GOV_ONDEMAND) {
 		struct od_cpu_dbs_info_s *od_dbs_info =
@@ -152,6 +153,19 @@ void dbs_check_cpu(struct dbs_data *dbs_data, int cpu)
 			j_cdbs->prev_load = load;
 		}
 
+		/*
+		 * Send govinfo notification.
+		 * Govinfo notification could potentially wake up another thread
+		 * managed by its clients. Thread wakeups might trigger a load
+		 * change callback that executes this function again. Therefore
+		 * no spinlock could be held when sending the notification.
+		 */
+		govinfo.cpu = j;
+		govinfo.load = load;
+		govinfo.sampling_rate_us = sampling_rate;
+		atomic_notifier_call_chain(&cpufreq_govinfo_notifier_list,
+						   CPUFREQ_LOAD_CHANGE, &govinfo);
+
 		if (load > max_load)
 			max_load = load;
 	}
@@ -232,10 +246,12 @@ static void set_sampling_rate(struct dbs_data *dbs_data,
 {
 	if (dbs_data->cdata->governor == GOV_CONSERVATIVE) {
 		struct cs_dbs_tuners *cs_tuners = dbs_data->tuners;
-		cs_tuners->sampling_rate = sampling_rate;
+		cs_tuners->sampling_rate = max(cs_tuners->sampling_rate,
+			sampling_rate);
 	} else {
 		struct od_dbs_tuners *od_tuners = dbs_data->tuners;
-		od_tuners->sampling_rate = sampling_rate;
+		od_tuners->sampling_rate = max(od_tuners->sampling_rate, 
+			sampling_rate);
 	}
 }
 
