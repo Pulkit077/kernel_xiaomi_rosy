@@ -125,6 +125,7 @@ config ARCH_QCOM
 	select MFD_CORE
 	select SND_SOC_COMPRESS
 	select SND_HWDEP
+	select PGTABLE_MAPPING if ZSMALLOC && (ARM || ARM64)
 	help
 	  This enables support for the ARMv8 based Qualcomm chipsets.
 
