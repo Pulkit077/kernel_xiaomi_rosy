@@ -2319,3 +2319,7 @@
 &gdsc_usb30 {
 	status = "okay";
 };
+
+&apps_iommu {
+	qcom,no-aarch64;
+};
