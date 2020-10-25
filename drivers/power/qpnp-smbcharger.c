@@ -8751,8 +8751,9 @@ static void period_update(struct work_struct *work)
 		return;
 	}
 
-	if (smbchg_debug_mask == 0xFF)
+	if (smbchg_debug_mask == 0xFF) {
 		dump_regs(chip);
+	}
 
 		temp		=	get_prop_batt_temp(chip)/10;
 		voltage		=	get_prop_batt_voltage_now(chip)/1000;
