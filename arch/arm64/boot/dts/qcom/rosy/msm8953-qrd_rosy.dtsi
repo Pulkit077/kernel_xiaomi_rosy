@@ -1,0 +1,207 @@
+&soc {
+	fpc1020 {
+		compatible = "fpc,fpc1020";
+		interrupt-parent = <&tlmm>;
+		interrupts = <48 0x0>;
+		fpc,gpio_rst    = <&tlmm 140 0>;
+		fpc,gpio_irq    = <&tlmm 48 0>;
+		fpc,gpio_pwr   = <&tlmm 134 0>;
+		vcc_spi-supply  = <&pm8953_l5>;
+		vdd_ana-supply  = <&pm8953_l5>;
+		vdd_io-supply   = <&pm8953_l5>;
+		fpc,enable-on-boot;
+		/delete-property/ fpc,enable-wakeup;
+		fpc,spi-max-frequency = <4800000>;
+		/* Only for SPI Clock Handled by Linux */
+		clock-names = "iface_clk", "core_clk";
+		clocks = <&clock_gcc clk_gcc_blsp1_ahb_clk>,
+			 <&clock_gcc clk_gcc_blsp1_qup1_spi_apps_clk>;
+
+		pinctrl-names = "fpc1020_spi_active",
+				"fpc1020_reset_reset",
+				"fpc1020_reset_active",
+				"fpc1020_irq_active";
+
+		pinctrl-0 = <&fpc_spi_active>;
+		pinctrl-1 = <&fpc_reset_reset>;
+		pinctrl-2 = <&fpc_reset_active>;
+		pinctrl-3 = <&fpc_irq_active>;
+	};
+
+	goodix_fp {
+		compatible = "goodix,fingerprint";
+		interrupt-parent = <&tlmm>;
+		interrupts = <48 0x1>;
+		fp-gpio-irq = <&tlmm 48 0x00>;
+		fp-gpio-reset = <&tlmm 140 0x00>;
+		fp-gpio-power = <&tlmm 134 0x00>;
+		spi-max-frequency = <19200000>;
+	};
+
+	iovdd_gpio_vreg: iovdd_gpio_vreg {
+		compatible = "regulator-fixed";
+		regulator-name="iovdd_gpio_vreg";
+		gpio = <&tlmm 97 0>; /* iovdd - ldo6 */
+		startup-delay-us = <300>;
+		enable-active-high;
+		regulator-boot-on;
+		status = "ok";
+	};
+};
+
+/ {
+	qrd_batterydata: qcom,battery-data {
+		qcom,batt-id-range-pct = <15>;
+		#include "batterydata-Scud-4v4-3300mah.dtsi"
+		#include "batterydata-Sunwoda-4v4-3300mah.dtsi"
+		#include "batterydata-D1_Default-4v4-3300mah.dtsi"
+	};
+};
+
+&i2c_3 {
+	status = "ok";
+
+	focaltech@38 {
+		compatible = "focaltech,fts";
+		reg = <0x38>;
+		interrupt-parent = <&tlmm>;
+		interrupts = <65 0x2008>;
+		vdd-supply = <&pm8953_l10>;
+		vcc_i2c-suppy = <&pm8953_l5>;
+		panel_iovdd-supply = <&iovdd_gpio_vreg>;
+		lab-supply = <&lab_regulator>;
+		ibb-supply = <&ibb_regulator>;
+		pinctrl-names = "pmx_ts_active", "pmx_ts_suspend",
+				"pmx_ts_release";
+		pinctrl-0 = <&ts_int_active &ts_reset_active>;
+		pinctrl-1 = <&ts_int_suspend &ts_reset_suspend>;
+		pinctrl-2 = <&ts_release>;
+		focaltech,name = "fts_ts";
+		focaltech,family-id = <0x54>;
+		focaltech,reset-gpio = <&tlmm 64 0x00>;
+		focaltech,irq-gpio = <&tlmm 65 0x2008>;
+		focaltech,display-coords = <0 0 720 1440>;
+		focaltech,panel-coords = <0 0 720 1440>;
+		focaltech,virtual-key1 = <139 560 2000>; /* menu */
+		focaltech,virtual-key2 = <102 360 2000>; /* home */
+		focaltech,virtual-key3 = <158 160 2000>; /* back */
+		focaltech,no-force-update;
+		focaltech,i2c-pull-up;
+		focaltech,group-id = <1>;
+		focaltech,hard-reset-delay-ms = <20>;
+		focaltech,soft-reset-delay-ms = <200>;
+		focaltech,num-max-touches = <10>;
+		focaltech,fw-delay-aa-ms = <30>;
+		focaltech,fw-delay-55-ms = <30>;
+		focaltech,fw-upgrade-id1 = <0x79>;
+		focaltech,fw-upgrade-id2 = <0x18>;
+		focaltech,fw-delay-readid-ms = <10>;
+		focaltech,fw-delay-era-flsh-ms = <2000>;
+		focaltech,fw-auto-cal;
+		focaltech,ignore-id-check;
+	};
+
+	focaltech@39 {
+		compatible = "focaltech,ft8006m";
+		reg = <0x39>;
+		interrupt-parent = <&tlmm>;
+		interrupts = <65 0x2008>;
+		vdd-supply = <&pm8953_l10>;
+		vcc_i2c-suppy = <&pm8953_l5>;
+		panel_iovdd-supply = <&iovdd_gpio_vreg>;
+		lab-supply = <&lab_regulator>;
+		ibb-supply = <&ibb_regulator>;
+		pinctrl-names = "pmx_ts_active", "pmx_ts_suspend",
+				"pmx_ts_release";
+		pinctrl-0 = <&ts_int_active &ts_reset_active>;
+		pinctrl-1 = <&ts_int_suspend &ts_reset_suspend>;
+		pinctrl-2 = <&ts_release>;
+		focaltech,name = "fts_ts";
+		focaltech,family-id = <0x54>;
+		focaltech,reset-gpio = <&tlmm 64 0x00>;
+		focaltech,irq-gpio = <&tlmm 65 0x2008>;
+		focaltech,display-coords = <0 0 720 1440>;
+		focaltech,panel-coords = <0 0 720 1440>;
+		focaltech,virtual-key1 = <139 560 2000>; /* menu */
+		focaltech,virtual-key2 = <102 360 2000>; /* home */
+		focaltech,virtual-key3 = <158 160 2000>; /* back */
+		focaltech,no-force-update;
+		focaltech,i2c-pull-up;
+		focaltech,group-id = <1>;
+		focaltech,hard-reset-delay-ms = <20>;
+		focaltech,soft-reset-delay-ms = <200>;
+		focaltech,num-max-touches = <10>;
+		focaltech,fw-delay-aa-ms = <30>;
+		focaltech,fw-delay-55-ms = <30>;
+		focaltech,fw-upgrade-id1 = <0x79>;
+		focaltech,fw-upgrade-id2 = <0x18>;
+		focaltech,fw-delay-readid-ms = <10>;
+		focaltech,fw-delay-era-flsh-ms = <2000>;
+		focaltech,fw-auto-cal;
+		focaltech,ignore-id-check;
+	};
+};
+
+&spmi_bus {
+	/delete-node/ qcom,pm8953_typec@bf00;
+
+	qcom,pmi8940@2 {
+		qpnp_smbcharger: qcom,qpnp-smbcharger {
+			spmi-dev-container;
+			qcom,battery-data = <&qrd_batterydata>;
+			qcom,float-voltage-mv = <4400>;
+			qcom,chg-inhibit-fg;
+			qcom,thermal-mitigation = <2000 1800 1500 1200 1000 0>;
+			status = "okay";
+			qcom,vchg_sns-vadc = <&pmi8940_vadc>;
+			qcom,vchg-adc-channel-id = <3>;
+			qcom,customize-cool-low-limit = <0>;
+			qcom,customize-cool-high-limit = <50>;
+			qcom,fastchg-current-customize-cool = <300>;
+			qcom,fastchg-current-bat-cool = <900>;
+			qcom,fastchg-current-ma = <1800>;
+		};
+		qpnp_fg: qcom,fg {
+			spmi-dev-container;
+			qcom,battery-data = <&qrd_batterydata>;
+			qcom,cold-bat-decidegc = <(0)>;
+			qcom,cool-bat-decidegc = <(150)>;
+			qcom,hot-bat-decidegc = <550>;
+			qcom,warm-bat-decidegc = <450>;
+			qcom,fg-iterm-ma = <230>;
+			qcom,fg-chg-iterm-ma = <200>;
+			qcom,resume-soc = <99>;
+			qcom,resume-soc-raw = <253>;
+			qcom,vbat-estimate-diff-mv = <100>;
+			qcom,fg-cutoff-voltage-mv = <3400>;
+			qcom,fg-cc-cv-threshold-mv = <4390>;
+			qcom,cl-max-increment-deciperc = <1>;
+			qcom,cl-max-decrement-deciperc = <1>;
+			qcom,fg-delta-soc = <2>;
+			qcom,bad-battery-detection-enable;
+			qcom,hold-soc-while-full;
+			qcom,thermal-coefficients = [DA 86 F0 50 08 3C];
+		};
+	};
+};
+
+/* from msm8953-qrd.dtsi */
+
+&pm8953_gpios {
+	/delete-node/ nfc_clk;
+};
+
+&i2c_5 {
+	/delete-node/ nq@28;
+};
+
+&sdhc_1 {
+	qcom,vdd-always-on;
+	reg = <0x7824900 0x500>, <0x7824000 0x800>, <0x7824e00 0x200>;
+	reg-names = "hc_mem", "core_mem", "cmdq_mem";
+};
+
+&sdhc_2 {
+	pinctrl-1 = <&sdc2_clk_off &sdc2_cmd_off &sdc2_data_off &sdc2_cd_off>;
+	cd-gpios = <&tlmm 133 0x0>;
+};
