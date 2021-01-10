@@ -1421,6 +1421,8 @@ config TOUCHSCREEN_GT9XX_v28
           If unsure, say N.
 
 source "drivers/input/touchscreen/gt9xx_v2.8/Kconfig"
+source "drivers/input/touchscreen/FT8716/Kconfig"
+source "drivers/input/touchscreen/FT8006m/Kconfig"
 
 config TOUCHSCREEN_HIMAX_CHIPSET
 	bool "Himax touchpanel CHIPSET"
