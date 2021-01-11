@@ -1,0 +1,5 @@
+config FINGERPRINT_FPC1020_ROSY
+	tristate "FingerPrint Cards fingerprint drvier support"
+	depends on FINGERPRINT_ROSY
+	help
+	  Say Y here to enable fpc1020 fingerprint driver support for rosy!
