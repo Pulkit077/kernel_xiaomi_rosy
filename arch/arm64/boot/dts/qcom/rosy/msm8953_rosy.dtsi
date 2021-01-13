@@ -109,6 +109,7 @@
 
 &i2c_3 {
 	status = "okay";
+	qcom,disable-dma;
 };
 
 &soc {
