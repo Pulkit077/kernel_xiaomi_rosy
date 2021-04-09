@@ -35,6 +35,13 @@
 #include <linux/qpnp/qpnp-misc.h>
 #include <linux/power_supply.h>
 
+#include <linux/hardware_info.h>
+
+#ifdef CONFIG_BOOT_INFO
+#include <asm/bootinfo.h>
+#define QPNP_POFF_REASON2(pon)	((pon)->base + 0xD)
+#endif
+
 #define PMIC_VER_8941           0x01
 #define PMIC_VERSION_REG        0x0105
 #define PMIC_VERSION_REV4_REG   0x0103
@@ -502,6 +509,58 @@ qpnp_get_cfg(struct qpnp_pon *pon, u32 pon_type)
 
 static DEVICE_ATTR(debounce_us, 0664, qpnp_pon_dbc_show, qpnp_pon_dbc_store);
 
+static ssize_t qpnp_kpdpwr_reset_show(struct device *dev,
+				      struct device_attribute *attr,
+				      char *buf)
+{
+	struct qpnp_pon *pon = dev_get_drvdata(dev);
+	u8 val;
+	int rc;
+
+	rc = spmi_ext_register_readl(pon->spmi->ctrl, pon->spmi->sid,
+				QPNP_PON_KPDPWR_S2_CNTL2(pon), &val, 1);
+	if (rc) {
+		dev_err(&pon->spmi->dev, "Unable to pon_dbc_ctl rc=%d\n", rc);
+		return rc;
+	}
+
+	val &= QPNP_PON_S2_RESET_ENABLE;
+	val = val >> 7;
+
+	return snprintf(buf, QPNP_PON_BUFFER_SIZE, "%d\n", val);
+}
+
+static ssize_t qpnp_kpdpwr_reset_store(struct device *dev,
+				       struct device_attribute *attr,
+				       const char *buf, size_t size)
+{
+	struct qpnp_pon *pon = dev_get_drvdata(dev);
+	u32 value;
+	int rc;
+
+	if (size > QPNP_PON_BUFFER_SIZE)
+		return -EINVAL;
+
+	rc = kstrtou32(buf, 10, &value);
+	if (rc)
+		return rc;
+
+	value = value << 7;
+
+	printk("qpnp_kpdpwr_reset_store set value: %d\n", value);
+
+	rc = qpnp_pon_masked_write(pon, QPNP_PON_KPDPWR_S2_CNTL2(pon),
+				QPNP_PON_S2_RESET_ENABLE, value);
+	if (rc) {
+		dev_err(&pon->spmi->dev, "Unable to configure kpdpwr reset\n");
+		return rc;
+	}
+
+	return size;
+}
+
+static DEVICE_ATTR(kpdpwr_reset, 0664, qpnp_kpdpwr_reset_show, qpnp_kpdpwr_reset_store);
+
 #define PON_TWM_ENTRY_PBS_BIT           BIT(0)
 static int qpnp_pon_reset_config(struct qpnp_pon *pon,
 		enum pon_power_off_type type)
@@ -777,6 +836,75 @@ int qpnp_pon_is_warm_reset(void)
 		return pon->warm_reset_reason1;
 }
 EXPORT_SYMBOL(qpnp_pon_is_warm_reset);
+
+#ifdef CONFIG_BOOT_INFO
+int qpnp_pon_is_ps_hold_reset(void)
+{
+	struct qpnp_pon *pon = sys_reset_dev;
+	int rc;
+	int reg = 0;
+
+	if (!pon)
+		return 0;
+
+	rc = regmap_read(pon->regmap, QPNP_POFF_REASON1(pon), &reg);
+	if (rc) {
+		dev_err(&pon->pdev->dev,
+				"Unable to read addr=%x, rc(%d)\n",
+				QPNP_POFF_REASON1(pon), rc);
+		return 0;
+	}
+	/* The bit 1 is 1, means by PS_HOLD/MSM controlled shutdown */
+	if (reg & (1<<POFF_REASON_EVENT_PS_HOLD))
+		return 1;
+
+	dev_info(&pon->pdev->dev,
+			"hw_reset reason1 is 0x%x\n",
+			reg);
+
+	rc = regmap_read(pon->regmap, QPNP_POFF_REASON2(pon), &reg);
+
+	dev_info(&pon->pdev->dev,
+			"hw_reset reason2 is 0x%x\n",
+			reg);
+	return 0;
+}
+EXPORT_SYMBOL(qpnp_pon_is_ps_hold_reset);
+
+int qpnp_pon_is_lpk(void)
+{
+	struct qpnp_pon *pon = sys_reset_dev;
+	int rc;
+	int reg = 0;
+
+	if (!pon)
+		return 0;
+
+	rc = regmap_read(pon->regmap, QPNP_POFF_REASON1(pon), &reg);
+	if (rc) {
+		dev_err(&pon->pdev->dev,
+				"Unable to read addr=%x, rc(%d)\n",
+				QPNP_POFF_REASON1(pon), rc);
+		return 0;
+	}
+
+	/* The bit 7 is 1, means the off reason is powerkey */
+	if (reg & (1<<POFF_REASON_EVENT_KPDPWR_N))
+		return 1;
+
+	dev_info(&pon->pdev->dev,
+			"hw_reset reason1 is 0x%x\n",
+			reg);
+
+	rc = regmap_read(pon->regmap, QPNP_POFF_REASON2(pon), &reg);
+
+	dev_info(&pon->pdev->dev,
+			"hw_reset reason2 is 0x%x\n",
+			reg);
+	return 0;
+}
+EXPORT_SYMBOL(qpnp_pon_is_lpk);
+#endif
 
 /**
  * qpnp_pon_wd_config - Disable the wd in a warm reset.
@@ -2149,6 +2277,35 @@ static int pon_register_twm_notifier(struct qpnp_pon *pon)
 	return rc;
 }
 
+extern char board_id[HARDWARE_MAX_ITEM_LONGTH];
+void probe_board_and_set(void)
+{
+	char *boadrid_start, *boardvol_start;
+	char boardid_info[HARDWARE_MAX_ITEM_LONGTH];
+
+	boadrid_start = strstr(saved_command_line, "board_id=");
+	boardvol_start = strstr(saved_command_line, "board_vol=");
+	memset(boardid_info, 0, HARDWARE_MAX_ITEM_LONGTH);
+
+	if (boadrid_start != NULL) {
+		boardvol_start = strstr(boadrid_start, ":board_vol=");
+
+		if (boardvol_start != NULL) {
+			strncpy(boardid_info,
+				boadrid_start+sizeof("board_id=")-1,
+				boardvol_start-(boadrid_start+sizeof("board_id=")-1));
+		} else {
+			strncpy(boardid_info,
+				boadrid_start+sizeof("board_id=")-1, 9);
+		}
+
+	} else {
+		sprintf(boardid_info, "boarid not define!");
+	}
+
+	strcpy(board_id, boardid_info);
+}
+
 static int qpnp_pon_probe(struct platform_device *pdev)
 {
 	struct qpnp_pon *pon;
@@ -2333,6 +2490,9 @@ static int qpnp_pon_probe(struct platform_device *pdev)
 				"PMIC@SID%d: Power-off reason: %s\n",
 				to_spmi_device(pon->pdev->dev.parent)->usid,
 				qpnp_poff_reason[index]);
+#ifdef CONFIG_BOOT_INFO
+				set_poweroff_reason(index);
+#endif
 	}
 
 	if (pon->pon_trigger_reason == PON_SMPL ||
@@ -2585,6 +2745,12 @@ static int qpnp_pon_probe(struct platform_device *pdev)
 		goto err_out;
 	}
 
+	rc = device_create_file(&spmi->dev, &dev_attr_kpdpwr_reset);
+	if (rc) {
+		dev_err(&spmi->dev, "sys file creation failed rc: %d\n", rc);
+		return rc;
+	}
+
 	if (of_property_read_bool(pdev->dev.of_node,
 					"qcom,secondary-pon-reset")) {
 		if (sys_reset) {
@@ -2607,6 +2773,7 @@ static int qpnp_pon_probe(struct platform_device *pdev)
 					"qcom,use-legacy-hard-reset-offset");
 
 	qpnp_pon_debugfs_init(pdev);
+	probe_board_and_set();
 	return 0;
 
 err_out:
