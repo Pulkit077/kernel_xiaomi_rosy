@@ -514,13 +514,12 @@ static ssize_t qpnp_kpdpwr_reset_show(struct device *dev,
 				      char *buf)
 {
 	struct qpnp_pon *pon = dev_get_drvdata(dev);
-	u8 val;
+	int val;
 	int rc;
 
-	rc = spmi_ext_register_readl(pon->spmi->ctrl, pon->spmi->sid,
-				QPNP_PON_KPDPWR_S2_CNTL2(pon), &val, 1);
+	rc = regmap_read(pon->regmap, QPNP_PON_KPDPWR_S2_CNTL2(pon), &val);
 	if (rc) {
-		dev_err(&pon->spmi->dev, "Unable to pon_dbc_ctl rc=%d\n", rc);
+		pr_err("Unable to read pon_dbc_ctl rc=%d\n", rc);
 		return rc;
 	}
 
@@ -546,15 +545,9 @@ static ssize_t qpnp_kpdpwr_reset_store(struct device *dev,
 		return rc;
 
 	value = value << 7;
+	value &= QPNP_PON_S2_RESET_ENABLE;
 
-	printk("qpnp_kpdpwr_reset_store set value: %d\n", value);
-
-	rc = qpnp_pon_masked_write(pon, QPNP_PON_KPDPWR_S2_CNTL2(pon),
-				QPNP_PON_S2_RESET_ENABLE, value);
-	if (rc) {
-		dev_err(&pon->spmi->dev, "Unable to configure kpdpwr reset\n");
-		return rc;
-	}
+	rc = regmap_write(pon->regmap, QPNP_PON_KPDPWR_S2_CNTL2(pon), value);
 
 	return size;
 }
@@ -2490,9 +2483,10 @@ static int qpnp_pon_probe(struct platform_device *pdev)
 				"PMIC@SID%d: Power-off reason: %s\n",
 				to_spmi_device(pon->pdev->dev.parent)->usid,
 				qpnp_poff_reason[index]);
+/* TODO: FIX THIS
 #ifdef CONFIG_BOOT_INFO
 				set_poweroff_reason(index);
-#endif
+#endif*/
 	}
 
 	if (pon->pon_trigger_reason == PON_SMPL ||
@@ -2745,9 +2739,9 @@ static int qpnp_pon_probe(struct platform_device *pdev)
 		goto err_out;
 	}
 
-	rc = device_create_file(&spmi->dev, &dev_attr_kpdpwr_reset);
+	rc = device_create_file(&pdev->dev, &dev_attr_kpdpwr_reset);
 	if (rc) {
-		dev_err(&spmi->dev, "sys file creation failed rc: %d\n", rc);
+		dev_err(&pdev->dev, "sys file creation failed rc: %d\n", rc);
 		return rc;
 	}
 
