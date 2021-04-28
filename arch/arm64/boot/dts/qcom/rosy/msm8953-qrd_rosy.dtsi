@@ -160,6 +160,7 @@
 			qcom,fastchg-current-customize-cool = <300>;
 			qcom,fastchg-current-bat-cool = <900>;
 			qcom,fastchg-current-ma = <1800>;
+			dpdm-supply = <&qusb_phy>;
 		};
 		qpnp_fg: qcom,fg {
 			spmi-dev-container;
