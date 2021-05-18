@@ -186,12 +186,6 @@
 	};
 };
 
-&pm8953_vadc {
-	/delete-property/ pinctrl-names;
-	/delete-property/ pinctrl-0;
-	/delete-node/ chan@11;
-};
-
 /* from msm8953-qrd.dtsi */
 
 &pm8953_gpios {

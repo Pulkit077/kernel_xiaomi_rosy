@@ -136,6 +136,7 @@
 &pm8953_vadc {
 	pinctrl-0 = <&pa_therm1_default>;
 	/delete-node/ chan@13;
+	/delete-node/ chan@3c;
 };
 
 &pm8953_mpps {
@@ -145,4 +146,5 @@
 &thermal_zones {
 	/delete-node/ case-therm-adc;
 	/delete-node/ case-therm-step;
+	/delete-node/ xo-therm-buf-adc;
 };
