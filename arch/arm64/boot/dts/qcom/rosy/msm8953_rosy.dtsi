@@ -202,7 +202,6 @@
 	qcom,msm-bus,num-cases = <2>;
 	qcom,usbin-vadc = <&pmi8940_vadc>;
 	extcon = <&qpnp_smbcharger>;
-	qcom,detect-dpdm-floating;
 };
 
 &qusb_phy {
