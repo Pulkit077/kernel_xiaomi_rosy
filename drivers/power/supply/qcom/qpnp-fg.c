@@ -4278,7 +4278,7 @@ static void fg_hysteresis_config(struct fg_chip *chip)
 		chip->batt_hot = true;
 		chip->batt_warm = false;
 		chip->batt_cold = false;
-		chip->batt_cold = false;
+		chip->batt_cool = false;
 	}  else if (chip->health != POWER_SUPPLY_HEALTH_OVERHEAT &&
 		chip->batt_hot) {
 		/* restore the hard hot threshold */
