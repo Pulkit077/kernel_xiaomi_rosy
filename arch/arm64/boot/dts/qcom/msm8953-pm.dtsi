@@ -35,6 +35,7 @@
 
 	qcom,lpm-levels {
 		compatible = "qcom,lpm-levels";
+		qcom,use-psci;
 		#address-cells = <1>;
 		#size-cells = <0>;
 
