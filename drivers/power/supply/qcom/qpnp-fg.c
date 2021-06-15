@@ -847,30 +847,6 @@ out:
 	return rc;
 }
 
-/* For now keep region TODO later */
-static int area_version_flag;
-static void get_area_version(struct fg_chip *chip)
-{
-	char *boardid_string = NULL;
-	char boardid_start[32] = " ";
-	int India;
-
-	boardid_string = strstr(saved_command_line, "board_id=");
-
-	if (boardid_string != NULL) {
-		strncpy(boardid_start, boardid_string+9, 9);
-		India = strncmp(boardid_start, "S88567CA1", 9);
-
-		if (!India) {
-			pr_err("India version!\n");
-			area_version_flag = 1;
-		} else {
-			pr_err("Normal version!\n");
-			area_version_flag = 0;
-		}
-	}
-}
-
 #define RIF_MEM_ACCESS_REQ	BIT(7)
 static int fg_check_rif_mem_access(struct fg_chip *chip, bool *status)
 {
@@ -4279,7 +4255,7 @@ static void fg_hysteresis_config(struct fg_chip *chip)
 		chip->batt_warm = false;
 		chip->batt_cold = false;
 		chip->batt_cool = false;
-	}  else if (chip->health != POWER_SUPPLY_HEALTH_OVERHEAT &&
+	} else if (chip->health != POWER_SUPPLY_HEALTH_OVERHEAT &&
 		chip->batt_hot) {
 		/* restore the hard hot threshold */
 		set_prop_jeita_temp(chip, FG_MEM_HARD_HOT,
@@ -4288,7 +4264,7 @@ static void fg_hysteresis_config(struct fg_chip *chip)
 		chip->batt_warm = true;
 		chip->batt_cold = false;
 		chip->batt_cool = false;
-	}else if (chip->health == POWER_SUPPLY_HEALTH_WARM &&
+	} else if (chip->health == POWER_SUPPLY_HEALTH_WARM &&
 		!chip->batt_warm) {
 		/* turn down the soft hot threshold */
 		set_prop_jeita_temp(chip, FG_MEM_SOFT_HOT,
@@ -4315,7 +4291,7 @@ static void fg_hysteresis_config(struct fg_chip *chip)
 		chip->batt_warm = false;
 		chip->batt_cold = false;
 		chip->batt_cool = true;
-	}else if (chip->health != POWER_SUPPLY_HEALTH_COOL &&
+	} else if (chip->health != POWER_SUPPLY_HEALTH_COOL &&
 		chip->batt_cool) {
 		/* restore the soft cold threshold */
 		set_prop_jeita_temp(chip, FG_MEM_SOFT_COLD,
@@ -4324,7 +4300,7 @@ static void fg_hysteresis_config(struct fg_chip *chip)
 		chip->batt_hot = false;
 		chip->batt_warm = false;
 		chip->batt_cold = false;
-	}else if (chip->health == POWER_SUPPLY_HEALTH_COLD &&
+	} else if (chip->health == POWER_SUPPLY_HEALTH_COLD &&
 		!chip->batt_cold) {
 		/* turn up the hard cold threshold */
 		set_prop_jeita_temp(chip, FG_MEM_HARD_COLD,
@@ -6575,9 +6551,6 @@ wait:
 	if (rc)
 		pr_warn("couldn't find battery max voltage\n");
 
-	if (area_version_flag == 1)
-		chip->batt_max_voltage_uv = 4380000;
-
 	/*
 	 * Only configure from profile if fg-cc-cv-threshold-mv is not
 	 * defined in the charger device node.
@@ -7267,8 +7240,6 @@ static int fg_of_init(struct fg_chip *chip)
 			DEFAULT_EVALUATION_CURRENT_MA);
 	OF_READ_PROPERTY(chip->cc_cv_threshold_mv,
 			"fg-cc-cv-threshold-mv", rc, 0);
-	if (area_version_flag == 1)
-		chip->cc_cv_threshold_mv = 4370;
 
 	if (of_property_read_bool(chip->pdev->dev.of_node,
 				"qcom,capacity-learning-on"))
@@ -9018,8 +8989,6 @@ static int fg_probe(struct platform_device *pdev)
 			rc = -EINVAL;
 		}
 	}
-
-	get_area_version(chip);
 
 	rc = fg_detect_pmic_type(chip);
 	if (rc) {

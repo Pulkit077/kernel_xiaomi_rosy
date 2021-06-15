@@ -51,6 +51,7 @@
 			qcom,adc-bit-resolution = <15>;
 			qcom,adc-vdd-reference = <1800>;
 			qcom,vadc-poll-eoc;
+			#thermal-sensor-cells = <1>;
 
 			chan@0 {
 				label = "usbin";
