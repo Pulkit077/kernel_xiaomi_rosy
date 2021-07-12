@@ -471,6 +471,8 @@ static void wcd_correct_swch_plug(struct work_struct *work)
 
 	/* Enable HW FSM */
 	WCD_MBHC_REG_UPDATE_BITS(WCD_MBHC_FSM_EN, 1);
+	msleep(20);
+
 	/*
 	 * Check for any button press interrupts before starting 3-sec
 	 * loop.

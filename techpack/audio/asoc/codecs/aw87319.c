@@ -62,7 +62,7 @@ struct pinctrl *aw87319ctrl = NULL;
 struct pinctrl_state *aw87319_rst_high = NULL;
 struct pinctrl_state *aw87319_rst_low = NULL;
 
-char Spk_Pa_Flag[] = " ";
+bool Spk_Pa_Flag = false;
 
 static void aw87319_pa_pwron(void)
 {
@@ -163,7 +163,7 @@ unsigned char AW87319_Audio_Speaker(void)
 	I2C_write_reg(0x03, 0x05);
 	I2C_write_reg(0x04, 0x04);
 	I2C_write_reg(0x05, 0x0D);
-	I2C_write_reg(0x06, 0x03);
+	I2C_write_reg(0x06, 0x05);
 	I2C_write_reg(0x07, 0x52);
 	I2C_write_reg(0x08, 0x28);
 	I2C_write_reg(0x09, 0x02);
@@ -347,8 +347,7 @@ static int aw87319_i2c_probe(struct i2c_client *client, const struct i2c_device_
 	if (!cnt) {
 		err = -ENODEV;
 		aw87319_hw_off();
-		strncpy(Spk_Pa_Flag, "S88537A12", 9);
-		pr_err("%s:can not find AW87319, board  is S88537A12\n!", __func__);
+		Spk_Pa_Flag = true;
 		goto exit_create_singlethread;
 	}
 
