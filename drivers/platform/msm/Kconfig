@@ -23,6 +23,10 @@ config RMNET_IPA
 	  for RmNet Data Driver and also exchange of QMI messages between
 	  A7 and Q6 IPA-driver.
 
+config DISABLE_IPA_WAKELOCKS
+	tristate "Disable IPA_V2 Wakelocks"
+	depends on IPA
+	
 config GSI
 	bool "GSI support"
 	help
